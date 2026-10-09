@@ -1,0 +1,330 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="theme-color" content="#000000" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <title>loopling speaker notes</title>
+    <style>
+      /* One job: the words you say. Everything else steps back. */
+      :root {
+        --bg: #000;
+        --ink: #f5f5f7;
+        --ink-2: #a1a1a6;
+        --ink-3: #6e6e73;
+        --line: rgba(255, 255, 255, 0.1);
+        --lime: #d8ff1f;
+        --font: 'SF Pro Text', -apple-system, BlinkMacSystemFont, 'Inter', system-ui, sans-serif;
+        --display: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Inter', system-ui, sans-serif;
+      }
+      * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+      html, body { background: var(--bg); color: var(--ink); font-family: var(--font); -webkit-font-smoothing: antialiased; }
+      body { min-height: 100svh; overscroll-behavior: none; }
+      button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+
+      header {
+        position: sticky; top: 0; z-index: 5;
+        display: flex; align-items: baseline; gap: 10px;
+        padding: calc(env(safe-area-inset-top) + 14px) 22px 12px;
+        background: rgba(0, 0, 0, 0.82);
+        -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px);
+      }
+      .count { font-family: var(--display); font-weight: 600; font-size: 15px; font-variant-numeric: tabular-nums; color: var(--ink); }
+      .count span { color: var(--ink-3); }
+      .title { flex: 1; font-size: 15px; font-weight: 500; color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .pill { font-size: 14px; font-weight: 600; color: var(--ink-3); font-variant-numeric: tabular-nums; padding: 4px 2px; }
+      .pill.on { color: var(--lime); }
+      .bar { position: absolute; left: 0; bottom: 0; height: 1px; background: var(--lime); transition: width 0.4s ease; }
+
+      main { padding: 4px 22px calc(env(safe-area-inset-bottom) + 112px); max-width: 640px; margin: 0 auto; }
+      .page { display: none; animation: in 0.3s ease both; }
+      .page.on { display: block; }
+      @keyframes in { from { opacity: 0; transform: translateY(4px); } }
+
+      .thumb { width: 100%; aspect-ratio: 16 / 9; border-radius: 10px; object-fit: cover; display: block; margin-top: 6px; opacity: 0.9; }
+
+      /* stage directions: quiet, before and after the script */
+      .cues { list-style: none; margin-top: 18px; }
+      .cues li, .after { position: relative; padding-left: 16px; font-size: 14px; line-height: 1.45; color: var(--ink-3); }
+      .cues li + li { margin-top: 6px; }
+      .cues li::before, .after::before { content: ''; position: absolute; left: 2px; top: 0.62em; width: 5px; height: 5px; border-radius: 50%; background: var(--ink-3); }
+      .cues li b { font-weight: 600; color: var(--ink-2); }
+      .after { margin-top: 16px; }
+      .after::before { background: var(--lime); }
+
+      /* the script: framed, lit, impossible to miss */
+      .script {
+        margin-top: 18px; padding: 20px 20px 22px;
+        border: 1px solid rgba(216, 255, 31, 0.35); border-radius: 20px;
+        background: linear-gradient(180deg, rgba(216, 255, 31, 0.05), rgba(216, 255, 31, 0) 120px);
+      }
+      .script-head { display: flex; justify-content: space-between; margin-bottom: 14px; font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--lime); }
+      .script-head span + span { color: var(--ink-3); letter-spacing: 0.02em; }
+      .script p { font-family: var(--display); font-size: 23px; line-height: 1.42; font-weight: 500; letter-spacing: -0.008em; color: #d2d2d7; }
+      .script p + p { margin-top: 14px; }
+      .script b { font-weight: 600; color: #fff; }
+      .script i { font-style: normal; color: var(--ink-3); }
+
+      /* an action inside the script: press here */
+      .press { display: flex; align-items: center; gap: 10px; margin: 16px 0 14px; font-size: 13px; line-height: 1.35; font-weight: 500; color: var(--ink-2); }
+      .press b { flex: 0 0 auto; padding: 4px 9px; border-radius: 980px; background: var(--lime); color: #0b0d08; font-size: 12px; font-weight: 700; letter-spacing: 0.04em; }
+
+      .zh { margin-top: 22px; padding: 0 2px; font-size: 15px; line-height: 1.6; color: var(--ink-3); }
+      .zh p + p { margin-top: 8px; }
+      body.no-zh .zh { display: none; }
+
+      nav {
+        position: fixed; left: 0; right: 0; bottom: 0; z-index: 5;
+        display: flex; gap: 10px; padding: 14px 22px calc(env(safe-area-inset-bottom) + 14px);
+        background: linear-gradient(transparent, #000 34%);
+      }
+      nav button { height: 54px; border-radius: 16px; font-size: 17px; font-weight: 600; }
+      nav .prev { width: 54px; flex: 0 0 auto; border: 1px solid var(--line); color: var(--ink-2); font-size: 20px; }
+      nav .next { flex: 1; background: var(--ink); color: #000; }
+      nav button:disabled { opacity: 0.3; }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="count" id="count"></div>
+      <div class="title" id="title"></div>
+      <button class="pill" id="lang" aria-label="Toggle Chinese">中</button>
+      <button class="pill" id="timer" aria-label="Rehearsal timer">0:00</button>
+      <i class="bar" id="bar"></i>
+    </header>
+    <main id="pages"></main>
+    <nav>
+      <button class="prev" id="prev" aria-label="Back">←</button>
+      <button class="next" id="next">Next</button>
+    </nav>
+
+    <script>
+      const PAGES = [
+        {
+          title: "Cover: AGI for creative work",
+          time: "~30s film + 10s",
+          cues: ["Before you start: sound up. The opening film and both films ship with the deck; open it a few minutes early on this laptop so they load (the vortex can hold the screen while you are introduced). On any new computer, press I: WebGL2 should read ✓; if it reads ✗, turn on hardware acceleration in the browser settings and reload.", "Click anywhere or press any key / the clicker to start: the point flares, then ~30 s of real originals with voiceover (cave hands → Michelangelo → Beethoven → Méliès → Earthrise → Space Invaders → AI years). Don’t press again; that jumps to the end card.", "Stay silent until “AGI for creative work” is on screen. Then speak."],
+          say: [
+            "I’m Samuel. I’m building <b>loopling, the AI superstudio</b>.",
+            "Our goal: <b>AGI for creative work</b>. Getting humanity to the next creative form, <b>faster</b>.",
+          ],
+          zh: [
+            "我是 Samuel，在做 loopling，AI 超级工作室。",
+            "我们的目标：AGI for creative work。让人类更快抵达下一种创作形式。",
+          ],
+          after: "Press → for the Founder page.",
+        },
+        {
+          title: "Founder",
+          time: "~65s",
+          cues: ["Everything builds in ~1.3 s. Start right away; the General Evolver landscape keeps climbing on its own.", "Say numbers as words: “eighty million”, “seven hundred million”, “one point five million”, “twenty twenty-six”."],
+          say: [
+            "Art student as a kid. Math in college, where I founded <b>Echo</b>, an AI social app on BERT. ZhenFund and angels backed it with <b>over $500K</b>.",
+            "Then I <b>dropped out</b> of my PhD.",
+            "At Liblib AI, I built <b>Lovart v0</b>, solo. <b>The world’s first design agent.</b>",
+            "Lovart hit <b>$80M ARR in five months</b>. Liblib AI became a <b>$1B unicorn</b>.",
+            "In April 2025, I prototyped <b>LibTV</b>: a video agent on the canvas, grown from the image node. <b>A year ahead of consensus.</b>",
+            "Liblib AI today: <b>$700M ARR</b>, <b>$3B valuation</b>.",
+            "Then one year of applied research. <b>$1.5M in tokens</b>, spent solo.",
+            "Evolutionary search, then recursive self-evolution: <b>General Evolver</b>. A NeurIPS 2026 Meta-Agents Workshop paper.",
+            "Today, <b>loopling’s code evolves itself</b>.",
+            "<b>Two months ago, I left to build loopling.</b>",
+          ],
+          zh: [
+            "小时候学美术，大学读数学，本科时创办了 Echo，基于 BERT 的 AI 社交 app。真格和天使投资人投了 50 万美金以上。",
+            "然后，我博士退学了。",
+            "在 Liblib AI，我一个人做出了 Lovart v0。世界上第一个设计 agent。",
+            "Lovart 五个月做到 8000 万美金 ARR。Liblib AI 成了 10 亿美金的独角兽。",
+            "2025 年 4 月，我做出了 LibTV 的原型：画布上的视频 agent，从图片节点长出来。比行业共识早一年。",
+            "Liblib AI 今天：ARR 7 亿美金，估值 30 亿美金。",
+            "然后是一年的 applied research。一个人花了 150 万美金的 token。",
+            "从进化搜索到递归自进化：General Evolver。一篇 NeurIPS 2026 Meta-Agents Workshop 论文。",
+            "今天，loopling 的代码在自我进化。",
+            "两个月前，我离开，来做 loopling。",
+          ],
+        },
+        {
+          title: "Team",
+          time: "~30s",
+          cues: ["Don’t read the logo row. Let it sit while you finish on Carl.", "Optional, only if a timed rehearsal runs under 3:30: “He also maintains Airbnb’s visx: 20k stars.”"],
+          say: [
+            "loopling is a <b>creative AI neo lab</b>. Top creators. Top researchers.",
+            "<b>Dou Niu</b> is the <b>#1 creator on LibTV</b>: <b>100M views</b> on AI video, 1M followers. These are his films.",
+            "<b>Carl Liu</b> is a Stanford HAI researcher in <b>Fei-Fei Li’s lab</b>.",
+            "Before that, he was Head of Engineering at Presence, a Sequoia and Lightspeed company: <b>$0 to $1M ARR</b>, <b>top 5</b> on the US App Store.",
+          ],
+          zh: [
+            "loopling 是一个 creative AI neo lab。顶尖创作者，顶尖研究员。",
+            "Dou Niu（牛斗）是 LibTV 排名第一的创作者：AI 视频 1 亿播放，100 万粉丝。这些是他的片子。",
+            "Carl Liu 是斯坦福 HAI 研究员，在李飞飞实验室。",
+            "之前他是红杉和光速投资的 Presence 的工程负责人：ARR 从 0 做到 100 万美金，美区 App Store 前五。",
+          ],
+        },
+        {
+          title: "Why now",
+          time: "~45s",
+          cues: ["The film WONDER starts on its own, with music, ~2 s after the slide lands and runs ~31 s. Talk over the opening credits; when the frame goes black (~11 s) pause one beat; let the drop land (~13 s), then carry on over the flight. It ends on the W◯NDER poster and holds in silence.", "Q&A: expect “Lovart and LibTV are still growing. Are they dead?” Have one line ready. If asked, the code film is an illustration; the real output is the next slide."],
+          say: [
+            "Our target: <b>a new form of AI video</b>, made a new way.",
+            "Seedance 2.5 clips, stitched together: <b>already outdated</b>.",
+            "The new form isn’t one model. It’s <b>many mediums, controlled by code</b>.",
+            "World, video, 3D, titles, score, synced to the beat. <b>Seven lines. Five models.</b> And it’s <b>just starting</b>.",
+            "Canvas and workflow? I built them: <b>Lovart</b> and <b>LibTV</b>. No platform in this space lives past <b>six months</b>.",
+            "[CUE] <b>Dead.</b>",
+            "Now is the moment for a <b>creative harness</b>. One-shot. End-to-end trained. <b>Self-evolving.</b>",
+            "Idea in, delivery out. It can run <b>24 hours</b> straight.",
+            "Here are two films loopling made.",
+          ],
+          cueInline: "Press → once, right after “six months”: the canvas shatters into “Dead.” Let the glass land, then say it.",
+          zh: [
+            "我们的目标：一种新形式的 AI 视频，用新的方式来做。",
+            "用 Seedance 2.5 生成片段再拼起来：已经过时了。",
+            "新形式不是一个模型，而是多种媒介，由代码控制。",
+            "世界、视频、3D、标题、配乐，全部卡在节拍上。七行代码，五个模型。而这才刚刚开始。",
+            "画布和 workflow？我亲手做过：Lovart 和 LibTV。这个领域没有一个平台活过六个月。",
+            "死了。",
+            "现在正是做 creative harness 的时候。一次成型，端到端训练，自我进化。",
+            "输入想法，输出交付。它能连续跑 24 小时。",
+            "看两支 loopling 做的片子。",
+          ],
+          after: "Press →: the Antler film starts the moment the slide arrives, with sound.",
+        },
+        {
+          title: "Films",
+          time: "pick one (1:20–3:49)",
+          cues: ["A screening room: ↑ ↓ (or ← →) choose, Enter or a click plays. Four films, newest first: Spike. Drive. Grit. (Antler CEO, 2:27) · Everybody’s Turn (Metatheory, 1:20) · Stay, Leo, Stay (Messi, 3:49) · Can or Not (Antler SG21, 2:04).", "Playing: Space pauses (title and time show over a dimmed frame), Esc goes back to the list, → closes and moves to the next film; B holds it silently under black. Esc right after a mistaken Enter folds it straight back. It returns to the list on its own when the film ends.", "Done with films: ↓ or PageDown goes to Business (→ past the last film does too). Business shows a still of whichever film you played last.", "Only one fits this meeting? Open the deck with ?film=messi (antler, metatheory, sg21)."],
+          say: [
+            "Four films. Five days. All made with loopling.",
+            "<i>(Pick one. Silent while it plays.)</i>",
+          ],
+          zh: [
+            "四支片子，五天，全部用 loopling 做的。",
+            "（选一支放，放映时不说话。）",
+          ],
+          after: "After the film, ↓ to Business.",
+        },
+        {
+          title: "Business",
+          time: "~20s",
+          cues: ["The rows collapse one at a time (~3.5 s): 90 blocks fold into one, 1,000 dots into one, then the margin bar lights. Start with the customer line while row 1 folds.", "Q&A: expect “$5,000 per film is project revenue. How much of it is recurring?”"],
+          say: [
+            "Our customer: <b>anyone with something to promote</b>. Enterprise and prosumer.",
+            "That film, made the traditional way: <b>30 days, $50,000</b>.",
+            "With loopling: <b>8 hours, $50</b>. <b>90x faster. 1,000x cheaper.</b>",
+            "We deliver it at <b>$5,000</b>. It costs us $50. <b>99% gross margin.</b>",
+          ],
+          zh: [
+            "我们的客户：任何有东西要推广的人。企业和 prosumer。",
+            "这支片子用传统方式做：30 天，5 万美金。",
+            "用 loopling：8 小时，50 美金。快 90 倍，便宜 1000 倍。",
+            "我们按 5000 美金交付，成本 50 美金。毛利 99%。",
+          ],
+        },
+        {
+          title: "Plan",
+          time: "~20s",
+          cues: ["Higgsfield’s gray dots appear first, then the lime line climbs with a live counter and lands on $1B (~4 s). Talk over it.", "If asked: the gray dots are Higgsfield’s company-reported run rate, Mar 2025 → Sep 2026."],
+          say: [
+            "We’re in beta now. Next six weeks: <b>$1M ARR</b>, before launch.",
+            "Then we launch the new product. Eighteen months later: <b>$1B ARR</b>.",
+            "Aggressive? <b>Higgsfield</b> went from <b>$1M to $1B</b> run rate in about 18 months. Their own numbers.",
+            "<b>That’s the pace we’re built for.</b>",
+          ],
+          zh: [
+            "现在在 beta。接下来六周：上线前做到 100 万美金 ARR。",
+            "然后上线新产品。上线后 18 个月：10 亿美金 ARR。",
+            "太激进？Higgsfield 大约 18 个月，run rate 从 100 万做到 10 亿美金。这是他们自己公布的数据。",
+            "我们就是冲着这个速度来的。",
+          ],
+        },
+        {
+          title: "Close",
+          time: "~15s",
+          cues: ["It fades through black onto the wall; the wall drifts on its own. Start once “Create wonder.” is up (~2 s).", "Leave this slide up for Q&A; the email stays on screen."],
+          say: [
+            "Lascaux. The Pyramids. The Mona Lisa. Apollo 11. <b>Every era made its own wonders.</b>",
+            "Video is our first form. <b>It won’t be our last.</b>",
+            "<b>Create wonder.</b>",
+            "Thank you.",
+          ],
+          zh: [
+            "拉斯科洞穴、金字塔、蒙娜丽莎、阿波罗 11 号。每个时代都造出了自己的奇迹。",
+            "视频是我们的第一种形式，但不会是最后一种。",
+            "创造奇迹。",
+            "谢谢。",
+          ],
+        },
+      ]
+
+      const $ = (id) => document.getElementById(id)
+      const root = $('pages')
+      PAGES.forEach((p, i) => {
+        const el = document.createElement('section')
+        el.className = 'page'
+        // "Q&A:" / "If asked:" / "Optional" lead-ins get a quiet label
+        const note = (t) => t.replace(/^(Q&A|If asked|Optional[^:]*):/, '<b>$1</b>')
+        const press = (t) => `<div class="press"><b>Press →</b><span>${t.replace(/^Press →\s*/, '')}</span></div>`
+        const say = p.say.map((s) => (s.startsWith('[CUE]') ? press(p.cueInline) + `<p>${s.slice(6)}</p>` : `<p>${s}</p>`)).join('')
+        el.innerHTML = `
+          <img class="thumb" src="img/s${i + 1}.jpg" alt="" loading="${i < 2 ? 'eager' : 'lazy'}">
+          ${(p.cues || []).length ? `<ul class="cues">${p.cues.map((c) => `<li>${note(c)}</li>`).join('')}</ul>` : ''}
+          <section class="script"><div class="script-head"><span>Say</span><span>${p.time}</span></div>${say}</section>
+          ${p.after ? `<p class="after">${p.after}</p>` : ''}
+          <div class="zh">${p.zh.map((z) => `<p>${z}</p>`).join('')}</div>`
+        root.appendChild(el)
+      })
+      const pages = [...root.children]
+      let cur = 0
+      function go(i) {
+        cur = Math.max(0, Math.min(PAGES.length - 1, i))
+        pages.forEach((p, k) => p.classList.toggle('on', k === cur))
+        $('count').innerHTML = `${String(cur + 1).padStart(2, '0')} <span>/ ${String(PAGES.length).padStart(2, '0')}</span>`
+        $('title').textContent = PAGES[cur].title
+        $('bar').style.width = `${((cur + 1) / PAGES.length) * 100}%`
+        $('prev').disabled = cur === 0
+        $('next').textContent = cur === PAGES.length - 1 ? 'Done' : 'Next'
+        history.replaceState(null, '', `#${cur + 1}`)
+        window.scrollTo({ top: 0 })
+      }
+      $('prev').onclick = () => go(cur - 1)
+      $('next').onclick = () => go(cur + 1)
+      addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') (e.preventDefault(), go(cur + 1))
+        if (e.key === 'ArrowLeft' || e.key === 'PageUp') (e.preventDefault(), go(cur - 1))
+      })
+      let sx = 0, sy = 0
+      addEventListener('touchstart', (e) => ((sx = e.touches[0].clientX), (sy = e.touches[0].clientY)), { passive: true })
+      addEventListener('touchend', (e) => {
+        const dx = e.changedTouches[0].clientX - sx, dy = e.changedTouches[0].clientY - sy
+        if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) go(cur + (dx < 0 ? 1 : -1))
+      })
+
+      // Chinese gloss on/off (remembered)
+      const lang = $('lang')
+      const setZh = (on) => (document.body.classList.toggle('no-zh', !on), lang.classList.toggle('on', on), localStorage.setItem('zh', on ? '1' : '0'))
+      setZh(localStorage.getItem('zh') !== '0')
+      lang.onclick = () => setZh(document.body.classList.contains('no-zh'))
+
+      // rehearsal timer + keep the screen awake while it runs
+      let t0 = 0, tick = 0, lock = null
+      const timer = $('timer')
+      timer.onclick = async () => {
+        if (tick) {
+          clearInterval(tick); tick = 0; timer.classList.remove('on'); lock?.release?.(); lock = null
+          return
+        }
+        t0 = Date.now(); timer.classList.add('on')
+        try { lock = await navigator.wakeLock?.request('screen') } catch {}
+        tick = setInterval(() => {
+          const s = Math.floor((Date.now() - t0) / 1000)
+          timer.textContent = `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
+        }, 250)
+      }
+
+      go((parseInt(location.hash.slice(1)) || 1) - 1)
+    </script>
+  </body>
+</html>
